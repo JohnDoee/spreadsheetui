@@ -61,6 +61,8 @@ Remember to change username, password. The secret_key should also be changed, an
 
 You can add as many clients as you want, see the provided examples for syntax.
 
+When you are done and have started Spreadsheet UI, it is accessible on port 18816
+
 Features
 --------------------------------
 
