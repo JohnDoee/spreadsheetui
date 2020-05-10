@@ -1,0 +1,7 @@
+version: "3"
+
+services:
+  backend:
+    image: johndoee/spreadsheetui:latest
+    volumes:
+      - ./config.toml:/spreadsheetui/config.toml

@@ -1,0 +1,14 @@
+APScheduler==3.6.3
+channels==2.4.0
+deluge-client==1.8.0
+Django==3.0.6
+django-environ==0.4.5
+django-filter==2.2.0
+djangorestframework==3.11.0
+jsonfield==3.1.0
+loguru==0.4.1
+requests==2.23.0
+timeoutthreadpoolexecutor==1.0.2
+toml==0.10.0
+Twisted==20.3.0
+txasgiresource==2.2.1

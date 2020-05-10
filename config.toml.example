@@ -1,0 +1,33 @@
+[spreadsheetui]
+endpoint_description = "tcp:18816"
+username = "username"
+password = "password"
+
+[django]
+secret_key = "a-secret-key"
+database_url = "sqlite:///sqlite.db"
+
+[clients]
+
+[clients.deluge]
+display_name = "A Deluge"
+client_type = "deluge"
+host = "127.0.0.1"
+port = 58846
+username = "localclient"
+password = "secretpassword"
+
+[clients.the-transmission]
+display_name = "Some transmission"
+client_type = "transmission"
+url = "http://127.0.0.1:9091/transmission/rpc"
+
+[clients.another-transmission]
+display_name = "Horse transmission"
+client_type = "transmission"
+url = "http://127.0.0.1:9092/transmission/rpc"
+
+[clients.rtorrent]
+display_name = "rtorrent"
+client_type = "rtorrent"
+url = "scgi://127.0.0.1:5000"
