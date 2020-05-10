@@ -94,9 +94,9 @@ class RTorrentClient(BaseClient):
         try:
             if "spreadsheet_active" not in self.proxy.view.list():
                 self.proxy.view.add("", "spreadsheet_active")
-                self.proxy.view.filter(
-                    "", "spreadsheet_active", "or={d.up.rate=,d.down.rate=}"
-                )
+            self.proxy.view.filter(
+                "", "spreadsheet_active", "or={d.up.rate=,d.down.rate=}"
+            )
         except (XMLRPCError, ConnectionError):
             raise FailedToUpdateException()
         return self._fetch_list_result("spreadsheet_active")
