@@ -50,7 +50,7 @@ class TorrentFilter(filters.FilterSet):
 
 
 class TorrentViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Torrent.objects.all().prefetch_related("torrent_client")
+    queryset = Torrent.objects.filter(torrent_client__enabled=True).prefetch_related("torrent_client")
     serializer_class = TorrentSerializer
     filterset_class = TorrentFilter
 
