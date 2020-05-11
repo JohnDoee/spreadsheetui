@@ -53,57 +53,58 @@ def update_torrents(clients=None, partial_update=False):
             seen_torrents = set()
             new_torrents = []
             update_torrents = []
+            modified_torrent_fields = set()
             for torrent_data in torrent_datas:
                 seen_torrents.add(torrent_data.infohash)
                 if torrent_data.infohash in existing_torrents:
                     torrent = existing_torrents[torrent_data.infohash]
-                    update_torrents.append(torrent)
+                    modified_torrent = False
+                    for key in keys:
+                        old_value = getattr(torrent, key)
+                        new_value = getattr(torrent_data, key)
+                        if old_value != new_value:
+                            modified_torrent = True
+                            modified_torrent_fields.add(key)
+                            setattr(torrent, key, new_value)
+                    if modified_torrent:
+                        update_torrents.append(torrent)
                 else:
                     torrent = Torrent(
                         torrent_client=torrent_client, infohash=torrent_data.infohash,
                     )
+                    for key in keys:
+                        setattr(torrent, key, getattr(torrent_data, key))
                     new_torrents.append(torrent)
-
-                for key in keys:
-                    setattr(torrent, key, getattr(torrent_data, key))
 
                 torrent.ratio = torrent.uploaded / torrent.size
 
-            if partial_update:
-                logger.debug(f"{torrent_client!r} Setting speeds to zero")
-                Torrent.objects.filter(torrent_client=torrent_client).filter(
-                    Q(upload_rate__gt=0) | Q(download_rate__gt=0)
-                ).exclude(pk__in=[t.pk for t in update_torrents]).update(
-                    upload_rate=0, download_rate=0
-                )
+            with settings.DATABASE_LOCK:
+                if partial_update:
+                    logger.debug(f"{torrent_client!r} Setting speeds to zero")
+                    Torrent.objects.filter(torrent_client=torrent_client).filter(
+                        Q(upload_rate__gt=0) | Q(download_rate__gt=0)
+                    ).exclude(pk__in=[t.pk for t in update_torrents]).update(
+                        upload_rate=0, download_rate=0
+                    )
 
-            logger.debug(f"{torrent_client!r} Creating {len(new_torrents)} torrents")
-            Torrent.objects.bulk_create(new_torrents)
+                logger.debug(f"{torrent_client!r} Creating {len(new_torrents)} torrents")
+                Torrent.objects.bulk_create(new_torrents)
 
-            logger.debug(f"{torrent_client!r} Updating {len(update_torrents)} torrents")
-            Torrent.objects.bulk_update(
-                update_torrents,
-                [
-                    "name",
-                    "size",
-                    "state",
-                    "progress",
-                    "uploaded",
-                    "tracker",
-                    "added",
-                    "upload_rate",
-                    "download_rate",
-                    "label",
-                    "ratio",
-                ],
-            )
+                if update_torrents:
+                    logger.debug(f"{torrent_client!r} Updating {len(update_torrents)} torrents with fields {modified_torrent_fields!r}")
+                    Torrent.objects.bulk_update(
+                        update_torrents,
+                        modified_torrent_fields,
+                    )
+                else:
+                    logger.debug(f"{torrent_client!r} No torrents to update")
 
-            if not partial_update:
-                to_delete = set(existing_torrents.keys()) - seen_torrents
-                logger.debug(f"{torrent_client!r} Deleting {len(to_delete)} torrents")
-                Torrent.objects.filter(
-                    torrent_client=torrent_client, infohash__in=to_delete
-                ).delete()
+                if not partial_update:
+                    to_delete = set(existing_torrents.keys()) - seen_torrents
+                    logger.debug(f"{torrent_client!r} Deleting {len(to_delete)} torrents")
+                    Torrent.objects.filter(
+                        torrent_client=torrent_client, infohash__in=to_delete
+                    ).delete()
 
 
 def import_config(path):

@@ -1,4 +1,5 @@
 import environ
+import threading
 
 env = environ.Env(DEBUG=(bool, False))
 # reading .env file
@@ -117,3 +118,4 @@ REST_FRAMEWORK = {
 
 TORRENT_UPDATE_PARTIAL_DELAY = 4
 TORRENT_UPDATE_FULL_DELAY = 300
+DATABASE_LOCK = threading.Lock()
