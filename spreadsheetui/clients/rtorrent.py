@@ -1,5 +1,6 @@
 from datetime import datetime
 from urllib.parse import urlsplit
+from xml.parsers.expat import ExpatError
 from xmlrpc.client import Error as XMLRPCError
 from xmlrpc.client import ServerProxy
 
@@ -53,7 +54,7 @@ class RTorrentClient(BaseClient):
                 "t.multicall=,t.get_url=",
                 "d.custom1=",
             )
-        except (XMLRPCError, ConnectionError):
+        except (XMLRPCError, ConnectionError, OSError, ExpatError):
             raise FailedToUpdateException()
         for torrent in torrents:
             if torrent[3]:
@@ -97,6 +98,6 @@ class RTorrentClient(BaseClient):
             self.proxy.view.filter(
                 "", "spreadsheet_active", "or={d.up.rate=,d.down.rate=}"
             )
-        except (XMLRPCError, ConnectionError):
+        except (XMLRPCError, ConnectionError, OSError, ExpatError):
             raise FailedToUpdateException()
         return self._fetch_list_result("spreadsheet_active")
