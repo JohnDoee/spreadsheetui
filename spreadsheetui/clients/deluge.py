@@ -46,7 +46,7 @@ class DelugeClient(BaseClient):
         try:
             with client:
                 torrents = client.core.get_torrents_status(filter, self.keys)
-        except (DelugeClientException, ConnectionError):
+        except (DelugeClientException, ConnectionError, OSError):
             raise FailedToUpdateException()
         for infohash, torrent_data in torrents.items():
             if torrent_data["state"] in ["Seeding", "Downloading"]:
