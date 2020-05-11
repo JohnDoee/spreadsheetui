@@ -30,7 +30,7 @@ from twisted.cred.checkers import ICredentialsChecker
 from twisted.cred.credentials import IUsernamePassword
 from twisted.cred.error import UnauthorizedLogin
 from twisted.cred.portal import IRealm, Portal
-from twisted.internet import defer, endpoints
+from twisted.internet import defer, endpoints, threads
 from twisted.plugin import IPlugin
 from twisted.python import usage
 from twisted.web import resource, server, static
@@ -87,10 +87,11 @@ class SchedulerService(service.Service):
         self.scheduler.shutdown()
 
 
-class UpdateTorrentDatabase:
-    def __init__(self, partial_update_delay, full_update_delay):
+class UpdateTorrentClient:
+    def __init__(self, torrent_client, partial_update_delay, full_update_delay):
         self.last_partial = 0
         self.last_full = 0
+        self.torrent_client = torrent_client
         self.partial_update_delay = partial_update_delay
         self.full_update_delay = full_update_delay
         self.lock = threading.Lock()
@@ -102,12 +103,12 @@ class UpdateTorrentDatabase:
             return
         try:
             if self.last_full + self.full_update_delay < time.monotonic():
-                logger.info("Running a full update")
-                update_torrents(partial_update=False)
+                logger.info(f"{self.torrent_client} Running a full update")
+                update_torrents([self.torrent_client], partial_update=False)
                 self.last_partial, self.last_full = time.monotonic(), time.monotonic()
             elif self.last_partial + self.partial_update_delay < time.monotonic():
-                logger.info("Running a partial update")
-                update_torrents(partial_update=True)
+                logger.info(f"{self.torrent_client} Running a partial update")
+                update_torrents([self.torrent_client], partial_update=True)
                 self.last_partial = time.monotonic()
         finally:
             self.lock.release()
@@ -222,13 +223,21 @@ class ServiceMaker(object):
 
             scheduler_service.scheduler.add_job(cleanup_thread, "interval", minutes=15)
 
-            utd = UpdateTorrentDatabase(
-                settings.TORRENT_UPDATE_PARTIAL_DELAY,
-                settings.TORRENT_UPDATE_FULL_DELAY,
-            )
-            scheduler_service.scheduler.add_job(
-                utd.cycle, "interval", seconds=2, max_instances=2
-            )
+            def initiate_torrent_clients():
+                from spreadsheetui.models import TorrentClient
+
+                for torrent_client in TorrentClient.objects.filter(enabled=True):
+                    utc = UpdateTorrentClient(
+                        torrent_client.name,
+                        settings.TORRENT_UPDATE_PARTIAL_DELAY,
+                        settings.TORRENT_UPDATE_FULL_DELAY,
+                    )
+
+                    scheduler_service.scheduler.add_job(
+                        utc.cycle, "interval", seconds=2, max_instances=2
+                    )
+
+            threads.deferToThread(initiate_torrent_clients)
 
         reactor.callLater(0, twisted_started)
 
