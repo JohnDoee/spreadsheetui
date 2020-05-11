@@ -1,7 +1,7 @@
 from django.db import models
 from jsonfield import JSONField
 
-from .clients import DelugeClient, RTorrentClient, TransmissionClient
+from .clients import DelugeClient, RTorrentClient, TransmissionClient, FakeClient
 
 
 class TorrentClient(models.Model):
@@ -11,12 +11,14 @@ class TorrentClient(models.Model):
     CLIENT_TYPE_DELUGE = "deluge"
     CLIENT_TYPE_RTORRENT = "rtorrent"
     CLIENT_TYPE_TRANSMISSION = "transmission"
+    CLIENT_TYPE_FAKECLIENT = "fakeclient"
     client_type = models.CharField(
         max_length=30,
         choices=(
             (CLIENT_TYPE_DELUGE, "Deluge"),
             (CLIENT_TYPE_RTORRENT, "rtorrent"),
             (CLIENT_TYPE_TRANSMISSION, "Transmission"),
+            (CLIENT_TYPE_FAKECLIENT, "Fake Client"),
         ),
     )
     config = JSONField()
@@ -34,6 +36,7 @@ TORRENT_CLIENT_MAPPING = {
     TorrentClient.CLIENT_TYPE_DELUGE: DelugeClient,
     TorrentClient.CLIENT_TYPE_TRANSMISSION: TransmissionClient,
     TorrentClient.CLIENT_TYPE_RTORRENT: RTorrentClient,
+    TorrentClient.CLIENT_TYPE_FAKECLIENT: FakeClient,
 }
 
 
