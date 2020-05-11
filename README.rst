@@ -7,6 +7,8 @@ This is a web frontend that can combine multiple torrent clients into one.
 The interface is based on ag-grid to provide stellar performance even with a large amount of torrents.
 As a plus it will also look a bit like a spreadsheet.
 
+.. image:: spreadsheetui.png
+
 Requirements
 --------------------------------
 
