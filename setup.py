@@ -34,7 +34,7 @@ setup(
         "APScheduler==3.6.3",
         "channels==2.4.0",
         "deluge-client==1.8.0",
-        "Django==3.0.6",
+        "Django==3.0.7",
         "django-environ==0.4.5",
         "django-filter==2.2.0",
         "djangorestframework==3.11.0",
