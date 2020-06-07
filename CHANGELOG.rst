@@ -3,7 +3,7 @@ Changelog
 ================================
 
 
-Version Unreleased ()
+Version 1.1.0 (07-06-2020)
 --------------------------------
 
 * Added: Fake client for testing
@@ -16,6 +16,7 @@ Version Unreleased ()
 * Change: Moved torrent clients out of the project and into its own library
 * Change: Moved docker to postgres
 * Change: Removed torrent clients into libtc
+* Change: Improved readme
 
 * Bugfix: rtorrent completion date corrected
 * Bugfix: Making sure ratio is updated
