@@ -16,18 +16,30 @@ host = "127.0.0.1"
 port = 58846
 username = "localclient"
 password = "secretpassword"
+session_path = "~/.config/deluge/"
 
 [clients.the-transmission]
 display_name = "Some transmission"
 client_type = "transmission"
 url = "http://127.0.0.1:9091/transmission/rpc"
+session_path = "~/.config/transmission-daemon/"
 
 [clients.another-transmission]
 display_name = "Horse transmission"
 client_type = "transmission"
 url = "http://127.0.0.1:9092/transmission/rpc"
+session_path = "~/.config/transmission-daemon2/"
 
 [clients.rtorrent]
 display_name = "rtorrent"
 client_type = "rtorrent"
 url = "scgi://127.0.0.1:5000"
+session_path = "~/.rtorrent/"
+
+[clients.another-qbittorrent]
+display_name = "qBittorrent 1"
+client_type = "qbittorrent"
+url = "http://localhost:8080/"
+username = "admin"
+password = "adminadmin"
+session_path = "~/.config/qbittorrent/"

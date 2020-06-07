@@ -4,6 +4,7 @@ ENV PYTHONUNBUFFERED 1
 
 COPY requirements.txt /
 RUN pip install -r /requirements.txt
+RUN pip install psycopg2-binary
 
 RUN mkdir /code
 COPY setup.py /code/
@@ -21,6 +22,8 @@ RUN cp /code/dist/*.tar.gz /
 RUN pip install .
 
 WORKDIR /
+
+COPY wait-for-it.sh /wait-for-it.sh
 
 RUN rm -r /code
 RUN mkdir /spreadsheetui

@@ -3,5 +3,22 @@ version: "3"
 services:
   backend:
     image: johndoee/spreadsheetui:latest
+    restart: unless-stopped
+    command: ["/wait-for-it.sh", "db:5432", "--", "twistd", "-n", "spreadsheetui"]
+    networks:
+      - spreadsheetui
+    environment:
+      - DATABASE_URL=postgres://spreadsheetui:ZGUtHsekgfQt6vQc6@db/spreadsheetui
     volumes:
       - ./config.toml:/spreadsheetui/config.toml
+  db:
+    image: postgres:12
+    restart: unless-stopped
+    networks:
+      - spreadsheetui
+    environment:
+      - POSTGRES_PASSWORD=ZGUtHsekgfQt6vQc6
+      - POSTGRES_USER=spreadsheetui
+
+networks:
+  spreadsheetui:

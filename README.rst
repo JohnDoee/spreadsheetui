@@ -3,6 +3,7 @@ Spreadsheet UI
 ================================
 
 This is a web frontend that can combine multiple torrent clients into one.
+Designed for the power-user who wants an overview and manage existing torrents.
 
 The interface is based on ag-grid to provide stellar performance even with a large amount of torrents.
 As a plus it will also look a bit like a spreadsheet.
@@ -65,6 +66,14 @@ You can add as many clients as you want, see the provided examples for syntax.
 
 When you are done and have started Spreadsheet UI, it is accessible on port 18816
 
+If you need to use a proxy layer to access your client (e.g. with Docker) `check out liltorrent <https://github.com/JohnDoee/libtc#liltorrent-usage>`_.
+
+Moving torrents
+--------------------------------
+
+For torrent moving to work, the `session_path` must be correct, `see more about session_path here <https://github.com/JohnDoee/libtc#session-path--fetching-torrents>`_
+
+
 Features
 --------------------------------
 
@@ -73,10 +82,13 @@ Clients:
 * rtorrent
 * Deluge
 * Transmission
+* qBittorrent
 
 Methods:
 
 * List all torrents
+* Start / stop torrents
+* Move torrents between clients
 
 Logo / icon
 --------------------------------

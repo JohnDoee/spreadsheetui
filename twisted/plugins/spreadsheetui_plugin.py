@@ -96,6 +96,9 @@ class UpdateTorrentClient:
         self.full_update_delay = full_update_delay
         self.lock = threading.Lock()
 
+    def schedule_full_update(self):
+        self.last_full = 0
+
     def cycle(self):
         from spreadsheetui.tasks import update_torrents
 
@@ -110,6 +113,23 @@ class UpdateTorrentClient:
                 logger.info(f"{self.torrent_client} Running a partial update")
                 update_torrents([self.torrent_client], partial_update=True)
                 self.last_partial = time.monotonic()
+        finally:
+            self.lock.release()
+
+
+class ExecuteJobs:
+    def __init__(self):
+        self.lock = threading.Lock()
+
+    def cycle(self):
+        from spreadsheetui.tasks import execute_jobs
+        from django.conf import settings
+        settings.SCHEDULER_SERVICE.scheduler.remove_job("execute_jobs_job")
+
+        if not self.lock.acquire(blocking=False):
+            return
+        try:
+            execute_jobs()
         finally:
             self.lock.release()
 
@@ -165,7 +185,8 @@ class ServiceMaker(object):
 
     def makeService(self, options):
         config = toml.load(options["config"])
-        os.environ["DATABASE_URL"] = config["django"]["database_url"]
+        if not os.environ.get("DATABASE_URL"):
+            os.environ["DATABASE_URL"] = config["django"]["database_url"]
         os.environ["SECRET_KEY"] = config["django"]["secret_key"]
         logger.remove(0)
         logger.add(sys.stdout, level="INFO")
@@ -178,6 +199,8 @@ class ServiceMaker(object):
         django.setup()
         application = get_default_application()
         from django.conf import settings
+        settings.SCHEDULER_SERVICE = scheduler_service
+        settings.EXECUTE_JOBS_SERVICE = ExecuteJobs()
 
         from django.core import management
 
@@ -225,6 +248,7 @@ class ServiceMaker(object):
 
             def initiate_torrent_clients():
                 from spreadsheetui.models import TorrentClient
+                settings.TORRENT_CLIENT_UPDATERS = []
 
                 for torrent_client in TorrentClient.objects.filter(enabled=True):
                     utc = UpdateTorrentClient(
@@ -232,6 +256,7 @@ class ServiceMaker(object):
                         settings.TORRENT_UPDATE_PARTIAL_DELAY,
                         settings.TORRENT_UPDATE_FULL_DELAY,
                     )
+                    settings.TORRENT_CLIENT_UPDATERS.append(utc)
 
                     scheduler_service.scheduler.add_job(
                         utc.cycle, "interval", seconds=2, max_instances=2

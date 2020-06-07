@@ -4,10 +4,11 @@ import time
 import toml
 from django.conf import settings
 from django.db.models import Q
+from django.utils.timezone import now
 from loguru import logger
 
 from .exceptions import FailedToUpdateException
-from .models import Torrent, TorrentClient
+from .models import Torrent, TorrentClient, Job
 
 
 def update_torrents(clients=None, partial_update=False):
@@ -92,6 +93,8 @@ def update_torrents(clients=None, partial_update=False):
 
                 if update_torrents:
                     logger.debug(f"{torrent_client!r} Updating {len(update_torrents)} torrents with fields {modified_torrent_fields!r}")
+                    if "uploaded" in modified_torrent_fields:
+                        modified_torrent_fields.add("ratio")
                     Torrent.objects.bulk_update(
                         update_torrents,
                         modified_torrent_fields,
@@ -139,3 +142,26 @@ def loop_update_torrents():
             update_torrents(partial_update=True)
             last_partial = time.monotonic()
         time.sleep(1)
+
+
+def execute_jobs():
+    while True:
+        jobs = Job.objects.filter(can_execute=True, execute_start_time__isnull=True).order_by('id')
+        if not jobs:
+            break
+        job = jobs[0]
+        job.execute_start_time = now()
+        job.save(update_fields=['execute_start_time'])
+        logger.debug(f"Starting job {job}")
+
+        job.execute()
+
+        try:
+            pass
+        except KeyboardInterrupt:
+            raise
+        except:
+            logger.exception(f"Failed to execute job {job}")
+
+        logger.debug(f"Finished job {job}")
+        job.delete()
