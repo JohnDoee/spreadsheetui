@@ -73,6 +73,26 @@ Moving torrents
 
 For torrent moving to work, the `session_path` must be correct, `see more about session_path here <https://github.com/JohnDoee/libtc#session-path--fetching-torrents>`_
 
+Executing jobs
+--------------------------------
+
+Jobs in SpreadsheetUI works by using a jobqueue. This means jobs are not executed before you trigger them so you can
+make sure all your scheduled jobs are as you want then to be.
+
+How to run a job
+
+* Select some torrents
+* Right-click and select the action you want (e.g. stop)
+* Right-click and click "Goto Jobqueue"
+* Verify your scheduled jobs
+* Right-click and click "Execute queued jobs"
+
+Your jobs will now slowly be executed in order.
+
+To go back to the dashboard: Right-click and click "Goto Dashboard"
+
+The changes might be slow to show up in your torrent list.
+If you want to force a full update, right-click and click "Run full update"
 
 Features
 --------------------------------
