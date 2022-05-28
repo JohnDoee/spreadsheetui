@@ -31,8 +31,7 @@ setup(
     },
     include_package_data=True,
     install_requires=[
-        "APScheduler~=3.6.3",
-        "channels~=2.4.0",
+        "APScheduler~=3.9.1",
         "Django~=3.0.6",
         "django-environ~=0.4.5",
         "django-filter~=2.2.0",
@@ -40,10 +39,9 @@ setup(
         "jsonfield~=3.1.0",
         "timeoutthreadpoolexecutor~=1.0.2",
         "toml~=0.10.0",
-        "Twisted~=20.3.0",
-        "txasgiresource~=2.2.1",
+        "Twisted~=22.4.0",
         "loguru~=0.5.0",
-        "libtc~=1.0.0",
+        "libtc~=1.2.2",
     ],
     classifiers=[
         "Development Status :: 3 - Alpha",

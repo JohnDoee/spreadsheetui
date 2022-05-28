@@ -8,7 +8,7 @@ from django.utils.timezone import now
 from loguru import logger
 
 from .exceptions import FailedToUpdateException
-from .models import Torrent, TorrentClient, Job
+from .models import Job, Torrent, TorrentClient
 
 
 def update_torrents(clients=None, partial_update=False):
@@ -71,7 +71,8 @@ def update_torrents(clients=None, partial_update=False):
                         update_torrents.append(torrent)
                 else:
                     torrent = Torrent(
-                        torrent_client=torrent_client, infohash=torrent_data.infohash,
+                        torrent_client=torrent_client,
+                        infohash=torrent_data.infohash,
                     )
                     for key in keys:
                         setattr(torrent, key, getattr(torrent_data, key))
@@ -88,11 +89,15 @@ def update_torrents(clients=None, partial_update=False):
                         upload_rate=0, download_rate=0
                     )
 
-                logger.debug(f"{torrent_client!r} Creating {len(new_torrents)} torrents")
+                logger.debug(
+                    f"{torrent_client!r} Creating {len(new_torrents)} torrents"
+                )
                 Torrent.objects.bulk_create(new_torrents)
 
                 if update_torrents:
-                    logger.debug(f"{torrent_client!r} Updating {len(update_torrents)} torrents with fields {modified_torrent_fields!r}")
+                    logger.debug(
+                        f"{torrent_client!r} Updating {len(update_torrents)} torrents with fields {modified_torrent_fields!r}"
+                    )
                     if "uploaded" in modified_torrent_fields:
                         modified_torrent_fields.add("ratio")
                     Torrent.objects.bulk_update(
@@ -104,25 +109,26 @@ def update_torrents(clients=None, partial_update=False):
 
                 if not partial_update:
                     to_delete = set(existing_torrents.keys()) - seen_torrents
-                    logger.debug(f"{torrent_client!r} Deleting {len(to_delete)} torrents")
+                    logger.debug(
+                        f"{torrent_client!r} Deleting {len(to_delete)} torrents"
+                    )
                     Torrent.objects.filter(
                         torrent_client=torrent_client, infohash__in=to_delete
                     ).delete()
 
 
-def import_config(path):
-    config = toml.load(path)
+def import_config(config):
     seen_clients = []
-    for name, config in config["clients"].items():
+    for name, client_config in config["clients"].items():
         seen_clients.append(name)
-        display_name = config.pop("display_name", name)
-        client_type = config.pop("client_type")
+        display_name = client_config.pop("display_name", name)
+        client_type = client_config.pop("client_type", None)
         TorrentClient.objects.update_or_create(
             name=name,
             defaults={
                 "display_name": display_name,
                 "client_type": client_type,
-                "config": config,
+                "config": client_config,
                 "enabled": True,
             },
         )
@@ -146,12 +152,14 @@ def loop_update_torrents():
 
 def execute_jobs():
     while True:
-        jobs = Job.objects.filter(can_execute=True, execute_start_time__isnull=True).order_by('id')
+        jobs = Job.objects.filter(
+            can_execute=True, execute_start_time__isnull=True
+        ).order_by("id")
         if not jobs:
             break
         job = jobs[0]
         job.execute_start_time = now()
-        job.save(update_fields=['execute_start_time'])
+        job.save(update_fields=["execute_start_time"])
         logger.debug(f"Starting job {job}")
 
         job.execute()

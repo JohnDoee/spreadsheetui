@@ -2,6 +2,16 @@
 Changelog
 ================================
 
+Version 1.2.0 (28-05-2022)
+--------------------------------
+
+* Change: Updated libtc to latest version and use same config parsing as autotorrent
+* Change: Limiting data fetched to improve performance, especially when scrolling.
+* Change: Updated webinterface library versions
+* Change: Removed channels and other asgi trash
+* Change: Timezone now local timezone instead of UTC
+
+* Bugfix: Units are now correct (not TiB while showing TB)
 
 Version 1.1.0 (07-06-2020)
 --------------------------------

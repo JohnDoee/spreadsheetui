@@ -6,17 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('spreadsheetui', '0002_auto_20200522_0752'),
+        ("spreadsheetui", "0002_auto_20200522_0752"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='job',
-            name='source_client',
+            model_name="job",
+            name="source_client",
         ),
         migrations.AddField(
-            model_name='job',
-            name='can_execute',
+            model_name="job",
+            name="can_execute",
             field=models.BooleanField(default=False),
         ),
     ]

@@ -1,10 +1,10 @@
-FROM python:3.7
+FROM python:3.10
 
 ENV PYTHONUNBUFFERED 1
 
 COPY requirements.txt /
 RUN pip install -r /requirements.txt
-RUN pip install psycopg2-binary
+RUN pip install psycopg2-binary==2.8.6
 
 RUN mkdir /code
 COPY setup.py /code/

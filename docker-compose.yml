@@ -11,6 +11,12 @@ services:
       - DATABASE_URL=postgres://spreadsheetui:ZGUtHsekgfQt6vQc6@db/spreadsheetui
     volumes:
       - ./config.toml:/spreadsheetui/config.toml
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "5"
+        max-size: "10m"
+
   db:
     image: postgres:12
     restart: unless-stopped

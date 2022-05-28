@@ -4,10 +4,8 @@ from concurrent.futures import thread  # isort:skip
 thread.ThreadPoolExecutor = TimeoutThreadPoolExecutor  # isort:skip
 
 import asyncio  # isort:skip
-import daphne.server  # isort:skip
-from twisted.internet import reactor  # isort:skip
-
-asyncio.set_event_loop(reactor._asyncioEventloop)  # isort:skip
+from twisted.internet import asyncioreactor
+asyncioreactor.install()
 
 
 import os
@@ -19,23 +17,23 @@ from pathlib import Path
 import django
 import toml
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from channels.routing import get_default_application
-from loguru import logger
-from txasgiresource import ASGIResource
-from zope.interface import implementer
+from django.core.wsgi import get_wsgi_application
 
-from twisted.application import service
+from loguru import logger
+from twisted.application import service, strports
 from twisted.application.service import IServiceMaker
 from twisted.cred.checkers import ICredentialsChecker
 from twisted.cred.credentials import IUsernamePassword
 from twisted.cred.error import UnauthorizedLogin
 from twisted.cred.portal import IRealm, Portal
-from twisted.internet import defer, endpoints, threads
+from twisted.internet import defer, endpoints, threads, reactor
 from twisted.plugin import IPlugin
 from twisted.python import usage
 from twisted.web import resource, server, static
 from twisted.web.guard import BasicCredentialFactory, HTTPAuthSessionWrapper
 from twisted.web.resource import IResource
+from twisted.web.wsgi import WSGIResource
+from zope.interface import implementer
 
 os.environ["DJANGO_SETTINGS_MODULE"] = "main.settings"
 
@@ -44,22 +42,27 @@ class Options(usage.Options):
     optFlags = []
 
     optParameters = [
-        ["config", "c", "config.toml", "Path to config file",],
+        [
+            "config",
+            "c",
+            "config.toml",
+            "Path to config file",
+        ],
     ]
 
 
 class Root(resource.Resource):
-    def __init__(self, asgi_resource, index_file_resource):
+    def __init__(self, wsgi_resource, index_resource):
         resource.Resource.__init__(self)
-        self.asgi_resource = asgi_resource
-        self.index_file_resource = index_file_resource
+        self.wsgi_resource = wsgi_resource
+        self.index_resource = index_resource
 
     def getChild(self, path, request):
-        if path == b"":
-            return self.index_file_resource
+        if not request.postpath:
+            return self.index_resource.getChild(path, request)
         path0 = request.prepath.pop(0)
         request.postpath.insert(0, path0)
-        return self.asgi_resource
+        return self.wsgi_resource
 
 
 class ASGIService(service.Service):
@@ -122,8 +125,10 @@ class ExecuteJobs:
         self.lock = threading.Lock()
 
     def cycle(self):
-        from spreadsheetui.tasks import execute_jobs
         from django.conf import settings
+
+        from spreadsheetui.tasks import execute_jobs
+
         settings.SCHEDULER_SERVICE.scheduler.remove_job("execute_jobs_job")
 
         if not self.lock.acquire(blocking=False):
@@ -197,8 +202,9 @@ class ServiceMaker(object):
         multi.addService(scheduler_service)
 
         django.setup()
-        application = get_default_application()
+        application = get_wsgi_application()
         from django.conf import settings
+
         settings.SCHEDULER_SERVICE = scheduler_service
         settings.EXECUTE_JOBS_SERVICE = ExecuteJobs()
 
@@ -208,18 +214,17 @@ class ServiceMaker(object):
         management.call_command("collectstatic", "--no-input")
         from spreadsheetui.tasks import import_config
 
-        import_config(options["config"])
+        import_config(config)
 
-        asgiresource = ASGIResource(
-            application, automatic_proxy_header_handling=True, use_x_sendfile=True
-        )
-        root = Root(
-            asgiresource,
-            File(Path(settings.STATIC_ROOT) / "spreadsheetui" / "index.html"),
-        )
+        wsgiresource = WSGIResource(reactor, reactor.getThreadPool(), application)
+        root = Root(wsgiresource, File(Path(settings.STATIC_ROOT) / "spreadsheetui"))
         root.putChild(
             settings.STATIC_URL.strip("/").encode("utf-8"),
             File(settings.STATIC_ROOT.encode("utf-8")),
+        )
+        root.putChild(
+            b"assets",
+            File(Path(settings.STATIC_ROOT) / "spreadsheetui" / "assets"),
         )
         site = server.Site(
             wrap_with_auth(
@@ -233,9 +238,7 @@ class ServiceMaker(object):
         )
 
         multi.addService(
-            ASGIService(
-                site, asgiresource, config["spreadsheetui"]["endpoint_description"]
-            )
+            strports.service(config["spreadsheetui"]["endpoint_description"], site)
         )
 
         def twisted_started():
@@ -248,6 +251,7 @@ class ServiceMaker(object):
 
             def initiate_torrent_clients():
                 from spreadsheetui.models import TorrentClient
+
                 settings.TORRENT_CLIENT_UPDATERS = []
 
                 for torrent_client in TorrentClient.objects.filter(enabled=True):

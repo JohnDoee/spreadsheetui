@@ -6,57 +6,75 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('spreadsheetui', '0004_job_blocking_job'),
+        ("spreadsheetui", "0004_job_blocking_job"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='job',
-            name='blocking_job',
+            model_name="job",
+            name="blocking_job",
         ),
         migrations.AlterField(
-            model_name='job',
-            name='action',
-            field=models.CharField(choices=[('start', 'Start'), ('stop', 'Stop'), ('remove', 'Remove'), ('move', 'Move')], max_length=20),
+            model_name="job",
+            name="action",
+            field=models.CharField(
+                choices=[
+                    ("start", "Start"),
+                    ("stop", "Stop"),
+                    ("remove", "Remove"),
+                    ("move", "Move"),
+                ],
+                max_length=20,
+            ),
         ),
         migrations.AlterField(
-            model_name='torrent',
-            name='added',
+            model_name="torrent",
+            name="added",
             field=models.DateTimeField(db_index=True),
         ),
         migrations.AlterField(
-            model_name='torrent',
-            name='download_rate',
+            model_name="torrent",
+            name="download_rate",
             field=models.BigIntegerField(db_index=True),
         ),
         migrations.AlterField(
-            model_name='torrent',
-            name='size',
+            model_name="torrent",
+            name="size",
             field=models.BigIntegerField(db_index=True),
         ),
         migrations.AlterField(
-            model_name='torrent',
-            name='state',
+            model_name="torrent",
+            name="state",
             field=models.CharField(db_index=True, max_length=20),
         ),
         migrations.AlterField(
-            model_name='torrent',
-            name='tracker',
+            model_name="torrent",
+            name="tracker",
             field=models.CharField(db_index=True, max_length=200),
         ),
         migrations.AlterField(
-            model_name='torrent',
-            name='upload_rate',
+            model_name="torrent",
+            name="upload_rate",
             field=models.BigIntegerField(db_index=True),
         ),
         migrations.AlterField(
-            model_name='torrent',
-            name='uploaded',
+            model_name="torrent",
+            name="uploaded",
             field=models.BigIntegerField(db_index=True),
         ),
         migrations.AlterField(
-            model_name='torrentclient',
-            name='client_type',
-            field=models.CharField(choices=[('deluge', 'Deluge'), ('rtorrent', 'rtorrent'), ('transmission', 'Transmission'), ('fakeclient', 'FakeClient'), ('qbittorrent', 'qBittorrent'), ('liltorrent', 'LilTorrent')], max_length=30),
+            model_name="torrentclient",
+            name="client_type",
+            field=models.CharField(
+                choices=[
+                    ("deluge", "Deluge"),
+                    ("rtorrent", "rtorrent"),
+                    ("transmission", "Transmission"),
+                    ("fakeclient", "FakeClient"),
+                    ("qbittorrent", "qBittorrent"),
+                    ("liltorrent", "LilTorrent"),
+                ],
+                max_length=30,
+            ),
         ),
     ]

@@ -76,6 +76,8 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"unique_together": {("torrent_client", "infohash")},},
+            options={
+                "unique_together": {("torrent_client", "infohash")},
+            },
         ),
     ]
