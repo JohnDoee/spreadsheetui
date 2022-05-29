@@ -2,8 +2,6 @@ import os
 
 from setuptools import find_packages, setup
 
-from spreadsheetui import __version__
-
 
 def readme():
     with open("README.rst") as f:
@@ -12,7 +10,7 @@ def readme():
 
 setup(
     name="spreadsheetui",
-    version=__version__,
+    version="1.2.0",
     url="https://github.com/JohnDoee/spreadsheetui",
     author="Anders Jensen",
     author_email="jd@tridentstream.org",
